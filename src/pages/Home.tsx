@@ -21,6 +21,7 @@ export default function Home() {
   // Add role into /api/me response by reading user_roles and include it.
   // For now, default to user dashboard.
   const role = data.role ?? "user";
-
+  console.log("User role:", role);
+  console.log("Full /api/me response:", data);
   return role === "admin" ? <AdminApp /> : <UserDashboard me={data} />;
 }

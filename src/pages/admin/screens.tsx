@@ -13,8 +13,9 @@ export function List() {
       <h2>Users (Roles)</h2>
       <ul>
         {result?.data?.map((u: any) => (
-          <li key={u.userId}>
-            <Link to={`/users/${u.userId}`}>{u.userId}</Link> — {u.role}
+          <li key={u.id}>
+            {u.name} || {u.email} || ({u.id}) || {u.role} — —
+            <Link to={`/users/${u.id}`}>Edit Role</Link>
           </li>
         ))}
       </ul>
