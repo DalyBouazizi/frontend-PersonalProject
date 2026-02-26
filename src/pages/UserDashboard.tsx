@@ -1,7 +1,13 @@
+import LogoutButton from "../auth/LogoutButton";
+
 export default function UserDashboard({ me }: { me: any }) {
   return (
     <div style={{ padding: 24 }}>
-      <h2>User Dashboard</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>User Dashboard</h2>
+        <LogoutButton />
+      </div>
+
       <div>
         <b>Email:</b> {me.user?.email}
       </div>
