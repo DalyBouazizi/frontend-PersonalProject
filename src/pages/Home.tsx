@@ -17,9 +17,6 @@ export default function Home() {
 
   if (!data) return <div style={{ padding: 24 }}>Loading...</div>;
 
-  // NOTE: right now backend /api/me doesn't return role.
-  // Add role into /api/me response by reading user_roles and include it.
-  // For now, default to user dashboard.
   const role = data.role ?? "user";
 
   return role === "admin" ? <AdminApp /> : <UserDashboard me={data} />;

@@ -1,12 +1,13 @@
 import { Refine } from "@refinedev/core";
 import routerProvider from "@refinedev/react-router";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import dataProvider from "@refinedev/simple-rest";
 import axios from "axios";
 import { List, Edit } from "./screens";
+import LogoutButton from "../../auth/LogoutButton";
 
 export default function AdminApp() {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = `${import.meta.env.VITE_API_URL}/api`;
 
   const axiosInstance = axios.create({
     withCredentials: true,
@@ -15,7 +16,22 @@ export default function AdminApp() {
   const dpCreds = dataProvider(apiUrl, axiosInstance);
 
   return (
-    <BrowserRouter>
+    <>
+      <div
+        style={{
+          padding: 16,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        <Link to="/users" style={{ textDecoration: "none" }}>
+          <button type="button">📋 Users List</button>
+        </Link>
+        <LogoutButton />
+      </div>
+
       <Refine
         dataProvider={dpCreds}
         routerProvider={routerProvider}
@@ -26,6 +42,6 @@ export default function AdminApp() {
           <Route path="/users/:id" element={<Edit />} />
         </Routes>
       </Refine>
-    </BrowserRouter>
+    </>
   );
 }
