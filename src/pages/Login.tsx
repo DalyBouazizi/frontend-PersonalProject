@@ -1,10 +1,17 @@
 import React from "react";
 import { authClient } from "../auth/client";
+import { updateProfile } from "../api/profile";
 
 export default function Login() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [name, setName] = React.useState("");
+  // Profile fields for registration
+  const [fullName, setFullName] = React.useState("");
+  const [age, setAge] = React.useState("");
+  const [bio, setBio] = React.useState("");
+  const [adress, setAdress] = React.useState("");
+
   const [mode, setMode] = React.useState<"login" | "register">("login");
   const [error, setError] = React.useState<string>("");
   const [loading, setLoading] = React.useState(false);
@@ -17,14 +24,30 @@ export default function Login() {
     try {
       if (mode === "login") {
         await authClient.signIn.email({ email, password });
+        window.location.href = "/";
       } else {
+        // Step 1: Register user first
         await authClient.signUp.email({ email, password, name });
-      }
 
-      window.location.href = "/";
+        // Step 2: Sign in to get session and user ID
+        await authClient.signIn.email({ email, password });
+
+        // Step 3: Fetch the current user session to get the user ID
+        const session = await authClient.getSession();
+        const userId = session?.data?.user?.id;
+
+        if (userId) {
+          // Step 4: Create the profile with the user ID
+          await updateProfile(userId, { fullName, age, bio, adress });
+        } else {
+          throw new Error("Failed to get user ID after registration");
+        }
+
+        window.location.href = "/";
+      }
     } catch (err: any) {
       console.error(err);
-      setError(err?.message ?? "Auth failed");
+      setError(err?.message ?? "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -35,18 +58,64 @@ export default function Login() {
       <h1>{mode === "login" ? "Login" : "Register"}</h1>
 
       <form
-        style={{ display: "grid", gap: 8, maxWidth: 320 }}
+        style={{ display: "grid", gap: 8, maxWidth: 400 }}
         onSubmit={onSubmit}
       >
         {mode === "register" && (
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            type="text"
-            name="name"
-            placeholder="Name"
-            required
-          />
+          <>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              type="text"
+              name="name"
+              placeholder="Name"
+              required
+            />
+
+            <hr
+              style={{
+                margin: "8px 0",
+                border: "none",
+                borderTop: "1px solid #ddd",
+              }}
+            />
+            <h3 style={{ margin: "8px 0", fontSize: 16 }}>
+              Profile Information
+            </h3>
+
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              type="text"
+              placeholder="Full Name *"
+              required
+            />
+
+            <input
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              type="text"
+              placeholder="Age *"
+              required
+            />
+
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Bio *"
+              rows={3}
+              required
+              style={{ padding: 8, fontFamily: "inherit" }}
+            />
+
+            <input
+              value={adress}
+              onChange={(e) => setAdress(e.target.value)}
+              type="text"
+              placeholder="Address *"
+              required
+            />
+          </>
         )}
 
         <input
