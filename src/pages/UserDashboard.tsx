@@ -15,6 +15,11 @@ export default function UserDashboard({ me }: { me: any }) {
   async function handleSave() {
     setError("");
     setSuccess(false);
+
+    if (!me?.user?.id) {
+      setError("User session is missing. Please sign in again.");
+      return;
+    }
     setLoading(true);
 
     try {

@@ -1,6 +1,6 @@
 import React from "react";
 import { authClient } from "../auth/client";
-import { updateProfile } from "../api/profile";
+import { updateProfile, getProfile } from "../api/profile";
 
 export default function Login() {
   const [email, setEmail] = React.useState("");
@@ -23,9 +23,27 @@ export default function Login() {
 
     try {
       if (mode === "login") {
+        // Login flow
         await authClient.signIn.email({ email, password });
+        
+        // Check if user has a profile after login
+        const session = await authClient.getSession();
+        const userId = session?.data?.user?.id;
+        
+        if (userId) {
+          const profile = await getProfile(userId);
+          
+          // If no profile exists, redirect to profile setup
+          if (!profile) {
+            localStorage.setItem("pending_profile_setup", userId);
+            window.location.href = "/profile-setup";
+            return;
+          }
+        }
+        
         window.location.href = "/";
       } else {
+        // Registration flow
         // Step 1: Register user first
         await authClient.signUp.email({ email, password, name });
 
@@ -36,18 +54,44 @@ export default function Login() {
         const session = await authClient.getSession();
         const userId = session?.data?.user?.id;
 
-        if (userId) {
-          // Step 4: Create the profile with the user ID
-          await updateProfile(userId, { fullName, age, bio, adress });
-        } else {
+        if (!userId) {
           throw new Error("Failed to get user ID after registration");
+        }
+
+        // Step 4: Create the profile with the user ID
+        try {
+          await updateProfile(userId, { fullName, age, bio, adress });
+          
+          // Step 5: Verify profile was created successfully
+          const createdProfile = await getProfile(userId);
+          
+          if (!createdProfile) {
+            // Profile creation failed silently, save userId and redirect to setup
+            localStorage.setItem("pending_profile_setup", userId);
+            setError("Profile creation incomplete. Redirecting to profile setup...");
+            setTimeout(() => {
+              window.location.href = "/profile-setup";
+            }, 2000);
+            return;
+          }
+        } catch (profileError: any) {
+          // Profile creation failed, save userId for retry
+          localStorage.setItem("pending_profile_setup", userId);
+          console.error("Profile creation error:", profileError);
+          setError(
+            `Account created but profile failed: ${profileError.message}. Redirecting to profile setup...`
+          );
+          setTimeout(() => {
+            window.location.href = "/profile-setup";
+          }, 2000);
+          return;
         }
 
         window.location.href = "/";
       }
     } catch (err: any) {
       console.error(err);
-      setError(err?.message ?? "Registration failed");
+      setError(err?.message ?? "Authentication failed");
     } finally {
       setLoading(false);
     }
